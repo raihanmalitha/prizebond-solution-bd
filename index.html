@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PrizeBond Solution BD</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #1D9E75;
+    --green-dark: #0F6E56;
+    --green-light: #E1F5EE;
+    --green-mid: #5DCAA5;
+    --amber: #F59E0B;
+    --red: #EF4444;
+    --blue: #3B82F6;
+    --bg: #F0FAF6;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --text2: #555;
+    --text3: #999;
+    --border: #e0ede8;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 16px rgba(29,158,117,0.08);
+  }
+  body { font-family: 'Hind Siliguri', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* SCREENS */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* AUTH SCREENS */
+  .auth-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
+  .auth-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem; width: 100%; max-width: 400px; border: 1px solid var(--border); }
+  .auth-logo { text-align: center; margin-bottom: 1.5rem; }
+  .auth-logo-icon { width: 56px; height: 56px; background: var(--green-light); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+  .auth-logo h1 { font-size: 18px; font-weight: 700; color: var(--green-dark); }
+  .auth-logo p { font-size: 13px; color: var(--text3); margin-top: 3px; }
+
+  /* FORM */
+  .field { margin-bottom: 1rem; }
+  .field label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 5px; font-weight: 500; }
+  .field input, .field select { width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; color: var(--text); background: #fafffe; outline: none; transition: border .2s; }
+  .field input:focus, .field select:focus { border-color: var(--green-mid); background: #fff; }
+  .field .phone-row { display: flex; border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: #fafffe; }
+  .field .phone-row:focus-within { border-color: var(--green-mid); background: #fff; }
+  .field .phone-prefix { padding: 10px 12px; font-size: 14px; color: var(--text2); border-right: 1.5px solid var(--border); background: var(--green-light); }
+  .field .phone-row input { border: none; background: transparent; flex: 1; }
+  .field .phone-row input:focus { background: transparent; }
+
+  .btn { width: 100%; padding: 12px; background: var(--green); color: #fff; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .2s, transform .1s; }
+  .btn:hover { background: var(--green-dark); }
+  .btn:active { transform: scale(0.98); }
+  .btn-outline { background: transparent; color: var(--green); border: 1.5px solid var(--green-mid); }
+  .btn-outline:hover { background: var(--green-light); }
+  .btn-sm { width: auto; padding: 7px 14px; font-size: 13px; }
+  .btn-red { background: #FEE2E2; color: var(--red); border: none; }
+  .btn-red:hover { background: #FECACA; }
+  .btn-amber { background: #FEF3C7; color: #92400E; border: none; }
+
+  .err { font-size: 13px; color: var(--red); margin-bottom: 10px; min-height: 18px; }
+  .link-btn { background: none; border: none; color: var(--green); font-size: 13px; cursor: pointer; text-decoration: underline; font-family: inherit; }
+  .divider { display: flex; align-items: center; gap: 10px; margin: 1rem 0; color: var(--text3); font-size: 12px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* APP LAYOUT */
+  .app-header { background: var(--card); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+  .app-header-left h2 { font-size: 15px; font-weight: 700; color: var(--green-dark); }
+  .app-header-left p { font-size: 12px; color: var(--text3); }
+  .app-body { flex: 1; padding: 16px; max-width: 480px; margin: 0 auto; width: 100%; }
+  .bottom-nav { background: var(--card); border-top: 1px solid var(--border); display: flex; padding: 8px 0 max(8px, env(safe-area-inset-bottom)); position: sticky; bottom: 0; }
+  .bnav { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; cursor: pointer; padding: 6px 0; font-family: inherit; font-size: 11px; color: var(--text3); transition: color .2s; }
+  .bnav.active { color: var(--green); }
+  .bnav svg { transition: transform .2s; }
+  .bnav.active svg { transform: scale(1.1); }
+
+  /* CARDS */
+  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; margin-bottom: 10px; box-shadow: var(--shadow); }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .stat-card { background: var(--green-light); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+  .stat-val { font-size: 22px; font-weight: 700; color: var(--green-dark); }
+  .stat-lbl { font-size: 11px; color: var(--green-dark); margin-top: 2px; opacity: .7; }
+
+  .bond-item { display: flex; align-items: center; justify-content: space-between; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; }
+  .bond-serial { font-size: 11px; font-weight: 600; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 99px; }
+  .bond-num { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 4px; }
+  .bond-date { font-size: 12px; color: var(--text3); }
+  .del-btn { background: none; border: none; cursor: pointer; padding: 6px; color: var(--text3); border-radius: 6px; transition: color .2s, background .2s; }
+  .del-btn:hover { color: var(--red); background: #FEE2E2; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .tab { flex: 1; padding: 8px; font-size: 13px; font-family: inherit; text-align: center; background: #f0f0f0; border: none; border-radius: var(--radius-sm); cursor: pointer; color: var(--text2); font-weight: 500; transition: all .2s; }
+  .tab.active { background: var(--green-light); color: var(--green-dark); }
+
+  /* BADGE */
+  .badge { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; display: inline-block; }
+  .badge-green { background: var(--green-light); color: var(--green-dark); }
+  .badge-amber { background: #FEF3C7; color: #92400E; }
+  .badge-blue { background: #DBEAFE; color: #1E40AF; }
+  .badge-red { background: #FEE2E2; color: #991B1B; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--card); border-radius: 20px 20px 0 0; padding: 1.5rem; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; animation: slideUp .3s ease; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 1.2rem; }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 1rem; color: var(--green-dark); }
+
+  /* SCAN */
+  .scan-area { border: 2px dashed var(--green-mid); border-radius: var(--radius); padding: 2rem; text-align: center; cursor: pointer; background: var(--green-light); transition: all .2s; }
+  .scan-area:hover { background: #c8eedf; }
+  .scan-icon { width: 56px; height: 56px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+  .detected-box { background: var(--green-light); border: 1px solid var(--green-mid); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px; }
+
+  /* LOADING */
+  .loading { display: flex; gap: 4px; align-items: center; justify-content: center; padding: 1rem; }
+  .loading span { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: bounce 1s infinite; }
+  .loading span:nth-child(2) { animation-delay: .15s; }
+  .loading span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce { 0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1} }
+
+  /* NOTIF */
+  .notif-item { display: flex; gap: 12px; background: var(--card); border: 1px solid var(--green-mid); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; cursor: pointer; }
+  .notif-icon { width: 38px; height: 38px; border-radius: 50%; background: var(--green-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .notif-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; position: absolute; top: 2px; right: 2px; }
+
+  /* ADMIN */
+  .user-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; }
+  .user-item.winner { border-color: var(--green-mid); background: var(--green-light); }
+  .prize-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 6px; }
+
+  /* TOAST */
+  #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: var(--green-dark); color: #fff; padding: 10px 20px; border-radius: 99px; font-size: 13px; font-weight: 500; opacity: 0; transition: opacity .3s; z-index: 999; white-space: nowrap; }
+  #toast.show { opacity: 1; }
+
+  .empty { text-align: center; padding: 2.5rem 1rem; color: var(--text3); font-size: 14px; }
+  .section-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+  .flex-between { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .code-box { font-family: monospace; font-size: 12px; background: #f5f5f5; padding: 8px 12px; border-radius: 6px; color: var(--text2); margin-top: 4px; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ===== LOGIN ===== -->
+<div id="s-login" class="screen active">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01M17 12h.01M7 12h.01"/></svg>
+        </div>
+        <h1>PrizeBond Solution BD</h1>
+        <p>আপনার অ্যাকাউন্টে লগইন করুন</p>
+      </div>
+      <div class="field">
+        <label>ইমেইল</label>
+        <input id="l-email" type="email" placeholder="example@gmail.com" />
+      </div>
+      <div class="field">
+        <label>পাসওয়ার্ড</label>
+        <input id="l-pass" type="password" placeholder="পাসওয়ার্ড দিন" />
+      </div>
+      <div style="text-align:right;margin-bottom:6px;"><button class="link-btn" onclick="openModal('modal-forgot')">পাসওয়ার্ড ভুলে গেছেন?</button></div>
+      <div class="err" id="l-err"></div>
+      <button class="btn" onclick="doLogin()">লগইন করুন</button>
+      <div class="divider">অথবা</div>
+      <div style="text-align:center;font-size:13px;color:var(--text2);">নতুন? <button class="link-btn" onclick="showScreen('s-reg')">নিবন্ধন করুন</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REGISTER ===== -->
+<div id="s-reg" class="screen">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01M17 12h.01M7 12h.01"/></svg>
+        </div>
+        <h1>PrizeBond Solution BD</h1>
+        <p>নতুন অ্যাকাউন্ট তৈরি করুন</p>
+      </div>
+      <div class="field"><label>পূর্ণ নাম</label><input id="r-name" placeholder="আপনার নাম" /></div>
+      <div class="field">
+        <label>মোবাইল নম্বর</label>
+        <div class="phone-row"><span class="phone-prefix">+880</span><input id="r-phone" type="tel" maxlength="11" placeholder="01XXXXXXXXX" /></div>
+      </div>
+      <div class="field"><label>ইমেইল <span style="color:var(--green);font-size:11px;">(পুরস্কারের বিজ্ঞপ্তি পাবেন)</span></label><input id="r-email" type="email" placeholder="example@gmail.com" /></div>
+      <div class="field"><label>পাসওয়ার্ড</label><input id="r-pass" type="password" placeholder="কমপক্ষে ৬ অক্ষর" /></div>
+      <div class="err" id="r-err"></div>
+      <button class="btn" onclick="doRegister()">নিবন্ধন করুন</button>
+      <div class="divider">অথবা</div>
+      <div style="text-align:center;font-size:13px;color:var(--text2);">আগে থেকে আছেন? <button class="link-btn" onclick="showScreen('s-login')">লগইন করুন</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="s-app" class="screen">
+  <div class="app-header">
+    <div class="app-header-left">
+      <h2>PrizeBond Solution BD</h2>
+      <p id="app-user-lbl">স্বাগতম</p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-outline btn-sm" style="position:relative;" onclick="switchTab('notif')">
+        বিজ্ঞপ্তি
+        <span id="notif-dot" style="display:none;width:8px;height:8px;background:var(--red);border-radius:50%;position:absolute;top:2px;right:2px;"></span>
+      </button>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">বের হন</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- DASHBOARD TAB -->
+    <div id="tab-dash">
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-val" id="st-total">0</div><div class="stat-lbl">মোট বন্ড</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-serial" style="font-size:14px;">—</div><div class="stat-lbl">সিরিয়াল</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-win" style="color:var(--amber);">0</div><div class="stat-lbl">পুরস্কার</div></div>
+      </div>
+      <div class="flex-between">
+        <div class="section-title">আমার প্রাইজবন্ড</div>
+        <span id="bond-count" style="font-size:12px;color:var(--text3);"></span>
+      </div>
+      <div id="bond-list"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+        <button class="btn btn-outline" onclick="openModal('modal-add')">+ ম্যানুয়াল যোগ</button>
+        <button class="btn" onclick="switchTab('scan')" style="display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          স্ক্যান
+        </button>
+      </div>
+      <div id="admin-btn-wrap" style="display:none;margin-top:8px;">
+        <button class="btn btn-amber" style="width:100%;" onclick="switchTab('admin')">⚙ Admin Panel</button>
+      </div>
+    </div>
+
+    <!-- SCAN TAB -->
+    <div id="tab-scan" style="display:none;">
+      <div class="section-title">ক্যামেরা দিয়ে স্ক্যান করুন</div>
+      <input type="file" id="cam-input" accept="image/*" capture="environment" style="display:none;" onchange="handleScan(event)" />
+      <div id="scan-idle">
+        <div class="scan-area" onclick="document.getElementById('cam-input').click()">
+          <div class="scan-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <div style="font-size:14px;font-weight:600;color:var(--green-dark);margin-bottom:4px;">ছবি তুলুন বা গ্যালারি থেকে বেছে নিন</div>
+          <div style="font-size:12px;color:var(--text3);">AI নিজে থেকে সিরিয়াল, নম্বর ও তারিখ খুঁজে নেবে</div>
+        </div>
+      </div>
+      <img id="preview-img" src="" alt="" style="display:none;max-width:100%;border-radius:10px;margin:12px 0;max-height:200px;object-fit:cover;" />
+      <div id="scan-loading" style="display:none;"><div class="loading"><span></span><span></span><span></span></div><div style="text-align:center;font-size:13px;color:var(--text3);">AI তথ্য শনাক্ত করছে...</div></div>
+      <div id="scan-result" style="display:none;">
+        <div class="detected-box">
+          <div style="font-size:12px;font-weight:600;color:var(--green-dark);margin-bottom:8px;">শনাক্ত করা তথ্য</div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;"><span style="color:var(--text2);">সিরিয়াল</span><span style="font-weight:600;" id="det-s">—</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;"><span style="color:var(--text2);">নম্বর</span><span style="font-weight:600;" id="det-n">—</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;"><span style="color:var(--text2);">তারিখ</span><span style="font-weight:600;" id="det-d">—</span></div>
+        </div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:8px;">সম্পাদনা করুন:</div>
+        <div class="field"><label>সিরিয়াল</label><select id="es"><option>কক</option><option>কখ</option><option>কগ</option><option>কঘ</option><option>কঙ</option><option>কচ</option><option>কছ</option><option>কজ</option><option>কঝ</option><option>কট</option><option>কঠ</option><option>কড</option><option>কণ</option><option>কত</option><option>কথ</option><option>কদ</option><option>কন</option><option>কপ</option><option>কফ</option><option>কব</option><option>কম</option><option>কল</option><option>কশ</option><option>কষ</option><option>কস</option><option>কহ</option><option>লক</option><option>লখ</option><option>লগ</option><option>লঘ</option><option>লঙ</option><option>লচ</option><option>লছ</option><option>লজ</option><option>লঝ</option><option>লট</option><option>লঠ</option><option>লড</option><option>লণ</option><option>লত</option><option>লথ</option><option>লদ</option><option>লন</option><option>লপ</option><option>লফ</option><option>লব</option><option>লল</option><option>লম</option><option>মক</option><option>মখ</option><option>মগ</option><option>মঘ</option><option>মঙ</option><option>মচ</option><option>মছ</option><option>মজ</option><option>মঝ</option><option>মট</option><option>মঠ</option><option>মড</option><option>মণ</option><option>মত</option><option>মথ</option><option>মদ</option><option>মন</option><option>মপ</option><option>মফ</option><option>মব</option><option>মম</option><option>মল</option><option>মশ</option><option>মষ</option><option>মস</option><option>মন</option><option>নক</option><option>নখ</option><option>নগ</option><option>নঘ</option><option>নঙ</option><option>নচ</option><option>নছ</option><option>নজ</option><option>নঝ</option><option>নট</option></select></div>
+        <div class="field"><label>বন্ড নম্বর</label><input type="number" id="en" /></div>
+        <div class="field"><label>ইস্যু তারিখ</label><input type="date" id="ed" /></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button class="btn btn-outline" onclick="resetScan()">আবার স্ক্যান</button>
+          <button class="btn" onclick="confirmScan()">যোগ করুন</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIF TAB -->
+    <div id="tab-notif" style="display:none;">
+      <div class="section-title">বিজ্ঞপ্তি</div>
+      <div id="notif-list"></div>
+    </div>
+
+    <!-- ADMIN TAB -->
+    <div id="tab-admin" style="display:none;">
+      <div class="section-title">Admin Panel</div>
+      <div class="stat-grid" style="margin-bottom:12px;">
+        <div class="stat-card"><div class="stat-val" id="adm-users">—</div><div class="stat-lbl">ব্যবহারকারী</div></div>
+        <div class="stat-card"><div class="stat-val" id="adm-bonds">—</div><div class="stat-lbl">মোট বন্ড</div></div>
+        <div class="stat-card"><div class="stat-val" id="adm-winners" style="color:var(--amber);">0</div><div class="stat-lbl">বিজয়ী</div></div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" id="at-result" onclick="switchAdminTab('result')">ফলাফল আপলোড</button>
+        <button class="tab" id="at-users" onclick="switchAdminTab('users')">ব্যবহারকারী</button>
+        <button class="tab" id="at-log" onclick="switchAdminTab('log')">মেইল লগ</button>
+      </div>
+      <div id="ap-result">
+        <div class="field"><label>ড্র তারিখ</label><input type="date" id="draw-date" /></div>
+        <div style="display:grid;grid-template-columns:auto 1fr 1fr auto;gap:8px;margin-bottom:12px;align-items:end;">
+          <div class="field" style="margin:0;"><label>পুরস্কার</label><select id="np-type"><option value="1st">১ম</option><option value="2nd">২য়</option><option value="3rd">৩য়</option></select></div>
+          <div class="field" style="margin:0;"><label>সিরিয়াল</label><select id="np-serial"><option>কক</option><option>কখ</option><option>কগ</option><option>কঘ</option><option>কঙ</option><option>কচ</option><option>কছ</option><option>কজ</option><option>কঝ</option><option>কট</option><option>কঠ</option><option>কড</option><option>কণ</option><option>কত</option><option>কথ</option><option>কদ</option><option>কন</option><option>কপ</option><option>কফ</option><option>কব</option><option>কম</option><option>কল</option><option>কশ</option><option>কষ</option><option>কস</option><option>কহ</option><option>লক</option><option>লখ</option><option>লগ</option><option>লঘ</option><option>লঙ</option><option>লচ</option><option>লছ</option><option>লজ</option><option>লঝ</option><option>লট</option><option>লঠ</option><option>লড</option><option>লণ</option><option>লত</option><option>লথ</option><option>লদ</option><option>লন</option><option>লপ</option><option>লফ</option><option>লব</option><option>লল</option><option>লম</option><option>মক</option><option>মখ</option><option>মগ</option><option>মঘ</option><option>মঙ</option><option>মচ</option><option>মছ</option><option>মজ</option><option>মঝ</option><option>মট</option><option>মঠ</option><option>মড</option><option>মণ</option><option>মত</option><option>মথ</option><option>মদ</option><option>মন</option><option>মপ</option><option>মফ</option><option>মব</option><option>মম</option><option>মল</option><option>মশ</option><option>মষ</option><option>মস</option><option>মন</option><option>নক</option><option>নখ</option><option>নগ</option><option>নঘ</option><option>নঙ</option><option>নচ</option><option>নছ</option><option>নজ</option><option>নঝ</option><option>নট</option></select></div>
+          <div class="field" style="margin:0;"><label>নম্বর</label><input type="number" id="np-num" placeholder="0234567" /></div>
+          <button class="btn btn-sm" onclick="addPrize()" style="align-self:flex-end;height:38px;">যোগ</button>
+        </div>
+        <div id="prize-list" style="margin-bottom:12px;"></div>
+        <div id="match-loading" style="display:none;"><div class="loading"><span></span><span></span><span></span></div><div style="text-align:center;font-size:13px;color:var(--text3);">ম্যাচ করা হচ্ছে...</div></div>
+        <div id="match-msg" style="font-size:13px;min-height:18px;margin-bottom:10px;"></div>
+        <button id="match-btn" class="btn" onclick="runMatch()" disabled style="opacity:.5;">ম্যাচ করুন ও Email পাঠান</button>
+      </div>
+      <div id="ap-users" style="display:none;"><div id="user-list-adm"></div></div>
+      <div id="ap-log" style="display:none;"><div id="email-log-list"></div></div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <button class="bnav active" id="bn-dash" onclick="switchTab('dash')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      ড্যাশবোর্ড
+    </button>
+    <button class="bnav" id="bn-scan" onclick="switchTab('scan')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      স্ক্যান
+    </button>
+    <button class="bnav" id="bn-notif" onclick="switchTab('notif')" style="position:relative;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      বিজ্ঞপ্তি
+      <span id="notif-dot2" style="display:none;width:7px;height:7px;background:var(--red);border-radius:50%;position:absolute;top:4px;right:18px;"></span>
+    </button>
+  </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div class="modal-overlay" id="modal-forgot" onclick="closeModal(event,'modal-forgot')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">পাসওয়ার্ড রিসেট করুন</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6;">আপনার ইমেইল দিন — একটি reset link পাঠানো হবে।</p>
+    <div class="field"><label>ইমেইল</label><input id="forgot-email" type="email" placeholder="example@gmail.com" /></div>
+    <div class="err" id="forgot-err"></div>
+    <div id="forgot-success" style="display:none;background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--green-dark);margin-bottom:10px;">Reset link পাঠানো হয়েছে! ইমেইল চেক করুন।</div>
+    <button class="btn" onclick="doForgotPassword()">Reset link পাঠান</button>
+    <div style="text-align:center;margin-top:10px;"><button class="link-btn" onclick="closeModalById('modal-forgot')">বাতিল করুন</button></div>
+  </div>
+</div>
+
+<!-- ADD BOND MODAL -->
+<div class="modal-overlay" id="modal-add" onclick="closeModal(event,'modal-add')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">প্রাইজবন্ড যোগ করুন</div>
+    <div class="tabs">
+      <button class="tab active" id="tabone" onclick="switchAddTab('one')">একটি বন্ড</button>
+      <button class="tab" id="tabrange" onclick="switchAddTab('range')">রেঞ্জ (একাধিক)</button>
+    </div>
+    <div id="form-one">
+      <div class="field"><label>সিরিয়াল</label><select id="as"><option value="">বেছে নিন</option><option>কক</option><option>কখ</option><option>কগ</option><option>কঘ</option><option>কঙ</option><option>কচ</option><option>কছ</option><option>কজ</option><option>কঝ</option><option>কট</option><option>কঠ</option><option>কড</option><option>কণ</option><option>কত</option><option>কথ</option><option>কদ</option><option>কন</option><option>কপ</option><option>কফ</option><option>কব</option><option>কম</option><option>কল</option><option>কশ</option><option>কষ</option><option>কস</option><option>কহ</option><option>লক</option><option>লখ</option><option>লগ</option><option>লঘ</option><option>লঙ</option><option>লচ</option><option>লছ</option><option>লজ</option><option>লঝ</option><option>লট</option><option>লঠ</option><option>লড</option><option>লণ</option><option>লত</option><option>লথ</option><option>লদ</option><option>লন</option><option>লপ</option><option>লফ</option><option>লব</option><option>লল</option><option>লম</option><option>মক</option><option>মখ</option><option>মগ</option><option>মঘ</option><option>মঙ</option><option>মচ</option><option>মছ</option><option>মজ</option><option>মঝ</option><option>মট</option><option>মঠ</option><option>মড</option><option>মণ</option><option>মত</option><option>মথ</option><option>মদ</option><option>মন</option><option>মপ</option><option>মফ</option><option>মব</option><option>মম</option><option>মল</option><option>মশ</option><option>মষ</option><option>মস</option><option>মন</option><option>নক</option><option>নখ</option><option>নগ</option><option>নঘ</option><option>নঙ</option><option>নচ</option><option>নছ</option><option>নজ</option><option>নঝ</option><option>নট</option></select></div>
+      <div class="field"><label>বন্ড নম্বর</label><input type="number" id="an" placeholder="0123456" /></div>
+      <div class="field"><label>ইস্যু তারিখ</label><input type="date" id="ad" /></div>
+      <div class="err" id="ae-err"></div>
+      <button class="btn" onclick="addOneBond()">যোগ করুন</button>
+    </div>
+    <div id="form-range" style="display:none;">
+      <div class="field"><label>সিরিয়াল</label><select id="rs"><option value="">বেছে নিন</option><option>কক</option><option>কখ</option><option>কগ</option><option>কঘ</option><option>কঙ</option><option>কচ</option><option>কছ</option><option>কজ</option><option>কঝ</option><option>কট</option><option>কঠ</option><option>কড</option><option>কণ</option><option>কত</option><option>কথ</option><option>কদ</option><option>কন</option><option>কপ</option><option>কফ</option><option>কব</option><option>কম</option><option>কল</option><option>কশ</option><option>কষ</option><option>কস</option><option>কহ</option><option>লক</option><option>লখ</option><option>লগ</option><option>লঘ</option><option>লঙ</option><option>লচ</option><option>লছ</option><option>লজ</option><option>লঝ</option><option>লট</option><option>লঠ</option><option>লড</option><option>লণ</option><option>লত</option><option>লথ</option><option>লদ</option><option>লন</option><option>লপ</option><option>লফ</option><option>লব</option><option>লল</option><option>লম</option><option>মক</option><option>মখ</option><option>মগ</option><option>মঘ</option><option>মঙ</option><option>মচ</option><option>মছ</option><option>মজ</option><option>মঝ</option><option>মট</option><option>মঠ</option><option>মড</option><option>মণ</option><option>মত</option><option>মথ</option><option>মদ</option><option>মন</option><option>মপ</option><option>মফ</option><option>মব</option><option>মম</option><option>মল</option><option>মশ</option><option>মষ</option><option>মস</option><option>মন</option><option>নক</option><option>নখ</option><option>নগ</option><option>নঘ</option><option>নঙ</option><option>নচ</option><option>নছ</option><option>নজ</option><option>নঝ</option><option>নট</option></select></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="field"><label>প্রথম নম্বর</label><input type="number" id="rf" placeholder="0100000" /></div>
+        <div class="field"><label>শেষ নম্বর</label><input type="number" id="rl" placeholder="0100050" /></div>
+      </div>
+      <div class="field"><label>ইস্যু তারিখ</label><input type="date" id="rd" /></div>
+      <div class="err" id="re-err"></div>
+      <div id="range-preview" style="font-size:13px;color:var(--green-dark);margin-bottom:10px;font-weight:500;"></div>
+      <button class="btn" onclick="addRangeBonds()">সব বন্ড যোগ করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBbjQSml1NXLsMklh_3oEwYCmJUURm9uhk",
+  authDomain: "prizebond-solution-bd.firebaseapp.com",
+  projectId: "prizebond-solution-bd",
+  storageBucket: "prizebond-solution-bd.firebasestorage.app",
+  messagingSenderId: "711771224109",
+  appId: "1:711771224109:web:085f0e5d0ed5370cb8e0a4"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ADMIN emails - আপনার email এখানে যোগ করুন
+const ADMIN_EMAILS = ["raihanmalitha5@gmail.com"];
+
+let currentUser = null;
+let bonds = [];
+let prizes = [];
+let emailLog = [];
+let notifications = [];
+
+window.db = db;
+window.auth = auth;
+window.currentUser = null;
+window.bonds = bonds;
+window.prizes = prizes;
+window.emailLog = emailLog;
+window.notifications = notifications;
+window.ADMIN_EMAILS = ADMIN_EMAILS;
+window.collection = collection;
+window.addDoc = addDoc;
+window.getDocs = getDocs;
+window.deleteDoc = deleteDoc;
+window.doc = doc;
+window.query = query;
+window.where = where;
+window.setDoc = setDoc;
+window.getDoc = getDoc;
+window.serverTimestamp = serverTimestamp;
+
+// AUTH STATE
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    window.currentUser = user;
+    const uSnap = await getDoc(doc(db, 'users', user.uid));
+    const uData = uSnap.exists() ? uSnap.data() : {};
+    window.userData = uData;
+    document.getElementById('app-user-lbl').textContent = 'স্বাগতম, ' + (uData.name || user.email);
+    const isAdmin = ADMIN_EMAILS.includes(user.email);
+    document.getElementById('admin-btn-wrap').style.display = isAdmin ? 'block' : 'none';
+    showScreen('s-app');
+    await loadBonds();
+    renderDash();
+  } else {
+    currentUser = null;
+    window.currentUser = null;
+    showScreen('s-login');
+  }
+});
+
+// FORGOT PASSWORD
+window.doForgotPassword = async function() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const err = document.getElementById('forgot-err');
+  const success = document.getElementById('forgot-success');
+  if (!email || !email.includes('@')) { err.textContent = 'সঠিক ইমেইল দিন।'; return; }
+  err.textContent = '';
+  try {
+    await sendPasswordResetEmail(auth, email);
+    success.style.display = 'block';
+    document.getElementById('forgot-email').value = '';
+    setTimeout(() => { closeModalById('modal-forgot'); success.style.display = 'none'; }, 3000);
+  } catch(e) {
+    err.textContent = e.code === 'auth/user-not-found' ? 'এই ইমেইলে কোনো অ্যাকাউন্ট নেই।' : 'সমস্যা হয়েছে, আবার চেষ্টা করুন।';
+  }
+};
+
+// REGISTER
+window.doRegister = async function() {
+  const name = document.getElementById('r-name').value.trim();
+  const phone = document.getElementById('r-phone').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const pass = document.getElementById('r-pass').value;
+  const err = document.getElementById('r-err');
+  if (!name) { err.textContent = 'নাম দিন।'; return; }
+  if (phone.length < 10) { err.textContent = 'সঠিক মোবাইল নম্বর দিন।'; return; }
+  if (!email || !email.includes('@')) { err.textContent = 'সঠিক ইমেইল দিন।'; return; }
+  if (pass.length < 6) { err.textContent = 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষর।'; return; }
+  err.textContent = '';
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await setDoc(doc(db, 'users', cred.user.uid), { name, phone, email, createdAt: serverTimestamp() });
+    showToast('নিবন্ধন সফল হয়েছে!');
+  } catch (e) {
+    err.textContent = e.code === 'auth/email-already-in-use' ? 'এই ইমেইল আগে থেকে ব্যবহৃত।' : 'সমস্যা হয়েছে, আবার চেষ্টা করুন।';
+  }
+};
+
+// LOGIN
+window.doLogin = async function() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value;
+  const err = document.getElementById('l-err');
+  if (!email) { err.textContent = 'ইমেইল দিন।'; return; }
+  if (!pass) { err.textContent = 'পাসওয়ার্ড দিন।'; return; }
+  err.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    err.textContent = 'ইমেইল বা পাসওয়ার্ড ভুল।';
+  }
+};
+
+// LOGOUT
+window.doLogout = async function() {
+  await signOut(auth);
+  bonds = []; window.bonds = bonds;
+  showToast('লগআউট হয়েছে');
+};
+
+// LOAD BONDS
+window.loadBonds = async function() {
+  if (!currentUser) return;
+  const q = query(collection(db, 'bonds'), where('owner', '==', currentUser.uid));
+  const snap = await getDocs(q);
+  bonds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  window.bonds = bonds;
+};
+
+// ADD ONE BOND
+window.addOneBond = async function() {
+  const serial = document.getElementById('as').value;
+  const number = document.getElementById('an').value.trim();
+  const date = document.getElementById('ad').value;
+  const err = document.getElementById('ae-err');
+  if (!serial) { err.textContent = 'সিরিয়াল বেছে নিন।'; return; }
+  if (!number) { err.textContent = 'বন্ড নম্বর দিন।'; return; }
+  if (!date) { err.textContent = 'তারিখ দিন।'; return; }
+  err.textContent = '';
+  try {
+    const ref = await addDoc(collection(db, 'bonds'), { serial, number: number.padStart(7,'0'), issue_date: date, owner: currentUser.uid, createdAt: serverTimestamp() });
+    bonds.push({ id: ref.id, serial, number: number.padStart(7,'0'), issue_date: date });
+    window.bonds = bonds;
+    closeModalById('modal-add');
+    renderDash();
+    showToast('বন্ড যোগ হয়েছে!');
+  } catch(e) { err.textContent = 'সমস্যা হয়েছে।'; }
+};
+
+// ADD RANGE BONDS
+window.addRangeBonds = async function() {
+  const serial = document.getElementById('rs').value;
+  const first = parseInt(document.getElementById('rf').value);
+  const last = parseInt(document.getElementById('rl').value);
+  const date = document.getElementById('rd').value;
+  const err = document.getElementById('re-err');
+  if (!serial) { err.textContent = 'সিরিয়াল বেছে নিন।'; return; }
+  if (isNaN(first) || isNaN(last)) { err.textContent = 'নম্বর দিন।'; return; }
+  if (last < first) { err.textContent = 'শেষ নম্বর বড় হতে হবে।'; return; }
+  if (last - first > 999) { err.textContent = 'সর্বোচ্চ ১০০০টি।'; return; }
+  if (!date) { err.textContent = 'তারিখ দিন।'; return; }
+  err.textContent = '';
+  for (let n = first; n <= last; n++) {
+    const num = String(n).padStart(7,'0');
+    const ref = await addDoc(collection(db, 'bonds'), { serial, number: num, issue_date: date, owner: currentUser.uid, createdAt: serverTimestamp() });
+    bonds.push({ id: ref.id, serial, number: num, issue_date: date });
+  }
+  window.bonds = bonds;
+  closeModalById('modal-add');
+  renderDash();
+  showToast((last - first + 1) + 'টি বন্ড যোগ হয়েছে!');
+};
+
+// DELETE BOND
+window.deleteBond = async function(id) {
+  await deleteDoc(doc(db, 'bonds', id));
+  bonds = bonds.filter(b => b.id !== id);
+  window.bonds = bonds;
+  renderDash();
+  showToast('বন্ড মুছা হয়েছে');
+};
+
+// RENDER DASH
+window.renderDash = function() {
+  const list = document.getElementById('bond-list');
+  document.getElementById('st-total').textContent = bonds.length;
+  const serials = [...new Set(bonds.map(b => b.serial))];
+  document.getElementById('st-serial').textContent = serials.length ? serials.join(', ') : '—';
+  document.getElementById('st-win').textContent = notifications.length;
+  document.getElementById('bond-count').textContent = bonds.length + 'টি বন্ড';
+  if (!bonds.length) { list.innerHTML = '<div class="empty">এখনো কোনো প্রাইজবন্ড যোগ করা হয়নি।</div>'; return; }
+  list.innerHTML = bonds.slice().reverse().map(b => `
+    <div class="bond-item">
+      <div>
+        <span class="bond-serial">${b.serial}</span>
+        <div class="bond-num">${b.number}</div>
+        <div class="bond-date">${b.issue_date || ''}</div>
+      </div>
+      <button class="del-btn" onclick="deleteBond('${b.id}')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      </button>
+    </div>`).join('');
+};
+
+// SCAN
+window.handleScan = async function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const img = document.getElementById('preview-img');
+  img.src = URL.createObjectURL(file);
+  img.style.display = 'block';
+  document.getElementById('scan-idle').style.display = 'none';
+  document.getElementById('scan-loading').style.display = 'block';
+  document.getElementById('scan-result').style.display = 'none';
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const base64 = e.target.result.split(',')[1];
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 300, messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: file.type || 'image/jpeg', data: base64 } },
+          { type: 'text', text: 'এটি একটি বাংলাদেশ প্রাইজবন্ড। সিরিয়াল (২ বাংলা অক্ষর যেমন কক, লখ, মগ, নচ ইত্যাদি), নম্বর (৭ সংখ্যা), তারিখ খুঁজে দাও। শুধু JSON: {"serial":"কক","number":"0123456","date":"2024-01-01"}' }
+        ]}] })
+      });
+      const data = await res.json();
+      const raw = data.content.map(i => i.text || '').join('').replace(/```json|```/g,'').trim();
+      const p = JSON.parse(raw);
+      document.getElementById('det-s').textContent = p.serial || '—';
+      document.getElementById('det-n').textContent = p.number || '—';
+      document.getElementById('det-d').textContent = p.date || '—';
+      document.getElementById('es').value = p.serial || 'ক';
+      document.getElementById('en').value = p.number || '';
+      document.getElementById('ed').value = p.date || '';
+    } catch(e) {
+      document.getElementById('det-s').textContent = 'শনাক্ত হয়নি';
+      document.getElementById('det-n').textContent = 'ম্যানুয়ালি দিন';
+      document.getElementById('det-d').textContent = '';
+    }
+    document.getElementById('scan-loading').style.display = 'none';
+    document.getElementById('scan-result').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.resetScan = function() {
+  document.getElementById('cam-input').value = '';
+  document.getElementById('preview-img').style.display = 'none';
+  document.getElementById('scan-idle').style.display = 'block';
+  document.getElementById('scan-loading').style.display = 'none';
+  document.getElementById('scan-result').style.display = 'none';
+};
+
+window.confirmScan = async function() {
+  const serial = document.getElementById('es').value;
+  const number = document.getElementById('en').value.trim();
+  const date = document.getElementById('ed').value;
+  if (!number || !date) { showToast('নম্বর ও তারিখ দিন'); return; }
+  const ref = await addDoc(collection(db, 'bonds'), { serial, number: number.padStart(7,'0'), issue_date: date, owner: currentUser.uid, createdAt: serverTimestamp() });
+  bonds.push({ id: ref.id, serial, number: number.padStart(7,'0'), issue_date: date });
+  window.bonds = bonds;
+  resetScan();
+  switchTab('dash');
+  renderDash();
+  showToast('বন্ড যোগ হয়েছে!');
+};
+
+// ADMIN
+window.addPrize = function() {
+  const type = document.getElementById('np-type').value;
+  const serial = document.getElementById('np-serial').value;
+  const num = document.getElementById('np-num').value.trim();
+  if (!num) return;
+  prizes.push({ type, serial, number: num.padStart(7,'0') });
+  window.prizes = prizes;
+  renderPrizes();
+  document.getElementById('np-num').value = '';
+};
+
+window.removePrize = function(i) {
+  prizes.splice(i, 1);
+  window.prizes = prizes;
+  renderPrizes();
+};
+
+window.renderPrizes = function() {
+  const list = document.getElementById('prize-list');
+  const btn = document.getElementById('match-btn');
+  btn.disabled = !prizes.length;
+  btn.style.opacity = prizes.length ? '1' : '.5';
+  if (!prizes.length) { list.innerHTML = ''; return; }
+  const labels = { '1st':'১ম', '2nd':'২য়', '3rd':'৩য়' };
+  list.innerHTML = prizes.map((p, i) => `
+    <div class="prize-row">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="badge ${p.type==='1st'?'badge-amber':p.type==='2nd'?'badge-blue':'badge-green'}">${labels[p.type]}</span>
+        <span style="font-size:13px;font-weight:600;">${p.serial} - ${p.number}</span>
+      </div>
+      <button class="btn btn-sm btn-red" onclick="removePrize(${i})">মুছুন</button>
+    </div>`).join('');
+};
+
+window.runMatch = async function() {
+  if (!prizes.length) return;
+  document.getElementById('match-loading').style.display = 'block';
+  document.getElementById('match-btn').disabled = true;
+  document.getElementById('match-msg').textContent = '';
+  const msg = document.getElementById('match-msg');
+  try {
+    const allBondsSnap = await getDocs(collection(db, 'bonds'));
+    const allBonds = allBondsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const allUsersSnap = await getDocs(collection(db, 'users'));
+    const allUsers = {};
+    allUsersSnap.docs.forEach(d => { allUsers[d.id] = d.data(); });
+    const prizeLabels = { '1st':'১ম পুরস্কার', '2nd':'২য় পুরস্কার', '3rd':'৩য় পুরস্কার' };
+    let count = 0;
+    const drawDate = document.getElementById('draw-date').value;
+    for (const bond of allBonds) {
+      for (const prize of prizes) {
+        if (bond.serial === prize.serial && bond.number === prize.number) {
+          const uData = allUsers[bond.owner];
+          if (!uData) continue;
+          count++;
+          const logEntry = { to: uData.email, name: uData.name, prize: prizeLabels[prize.type], serial: bond.serial, number: bond.number, date: drawDate, sentAt: new Date().toLocaleTimeString('bn-BD') };
+          emailLog.unshift(logEntry);
+          window.emailLog = emailLog;
+          await addDoc(collection(db, 'emailLog'), { ...logEntry, createdAt: serverTimestamp() });
+          if (bond.owner === currentUser.uid) {
+            notifications.unshift({ prize: prizeLabels[prize.type], serial: bond.serial, number: bond.number, date: drawDate, email: uData.email, name: uData.name });
+            window.notifications = notifications;
+            document.getElementById('notif-dot').style.display = 'block';
+            document.getElementById('notif-dot2').style.display = 'block';
+          }
+          document.getElementById('adm-winners').textContent = count;
+        }
+      }
+    }
+    document.getElementById('match-loading').style.display = 'none';
+    document.getElementById('match-btn').disabled = false;
+    document.getElementById('match-btn').style.opacity = '1';
+    if (count > 0) {
+      msg.style.color = 'var(--green-dark)';
+      msg.textContent = count + 'জন বিজয়ী পাওয়া গেছে। ' + count + 'টি email log হয়েছে।';
+      renderDash();
+    } else {
+      msg.style.color = 'var(--red)';
+      msg.textContent = 'কোনো মিল পাওয়া যায়নি।';
+    }
+  } catch(e) {
+    document.getElementById('match-loading').style.display = 'none';
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'সমস্যা হয়েছে, আবার চেষ্টা করুন।';
+  }
+};
+
+window.loadAdminData = async function() {
+  const usersSnap = await getDocs(collection(db, 'users'));
+  const bondsSnap = await getDocs(collection(db, 'bonds'));
+  const logSnap = await getDocs(collection(db, 'emailLog'));
+  document.getElementById('adm-users').textContent = usersSnap.size;
+  document.getElementById('adm-bonds').textContent = bondsSnap.size;
+  const users = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const winnerEmails = logSnap.docs.map(d => d.data().to);
+  const list = document.getElementById('user-list-adm');
+  list.innerHTML = users.map(u => `
+    <div class="user-item ${winnerEmails.includes(u.email) ? 'winner' : ''}">
+      <div>
+        <div style="font-size:13px;font-weight:600;">${u.name || '—'}</div>
+        <div style="font-size:12px;color:var(--text3);">${u.phone || ''} · ${u.email}</div>
+      </div>
+      ${winnerEmails.includes(u.email) ? '<span class="badge badge-amber">বিজয়ী</span>' : '<span style="font-size:12px;color:var(--text3);">কোনো মিল নেই</span>'}
+    </div>`).join('') || '<div class="empty">কোনো ব্যবহারকারী নেই।</div>';
+  const logList = document.getElementById('email-log-list');
+  const logs = logSnap.docs.map(d => d.data());
+  logList.innerHTML = logs.length ? logs.map(e => `
+    <div class="card" style="margin-bottom:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:13px;font-weight:600;">${e.name}</span>
+        <span class="badge badge-green">পাঠানো হয়েছে</span>
+      </div>
+      <div style="font-size:12px;color:var(--text3);">${e.to}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px;">${e.prize} — ${e.serial}-${e.number}</div>
+    </div>`).join('') : '<div class="empty">এখনো কোনো email log নেই।</div>';
+};
+
+window.switchAdminTab = function(tab) {
+  ['result','users','log'].forEach(t => {
+    document.getElementById('at-'+t).classList.toggle('active', t===tab);
+    document.getElementById('ap-'+t).style.display = t===tab ? 'block' : 'none';
+  });
+  if (tab === 'users' || tab === 'log') loadAdminData();
+};
+
+// NOTIF
+window.renderNotif = function() {
+  document.getElementById('notif-dot').style.display = 'none';
+  document.getElementById('notif-dot2').style.display = 'none';
+  const list = document.getElementById('notif-list');
+  if (!notifications.length) { list.innerHTML = '<div class="empty">এখনো কোনো বিজ্ঞপ্তি নেই।</div>'; return; }
+  list.innerHTML = notifications.map(n => `
+    <div class="notif-item">
+      <div class="notif-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:600;">অভিনন্দন! আপনি জিতেছেন!</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${n.prize} — বন্ড ${n.serial}-${n.number}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">${n.date} · email: ${n.email}</div>
+      </div>
+    </div>`).join('');
+};
+
+</script>
+
+<script>
+// UI helpers (non-module)
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function switchTab(tab) {
+  ['dash','scan','notif','admin'].forEach(t => {
+    const el = document.getElementById('tab-'+t);
+    if (el) el.style.display = 'none';
+    const bn = document.getElementById('bn-'+t);
+    if (bn) bn.classList.toggle('active', t===tab);
+  });
+  const active = document.getElementById('tab-'+tab);
+  if (active) active.style.display = 'block';
+  if (tab === 'notif' && window.renderNotif) window.renderNotif();
+  if (tab === 'scan' && window.resetScan) window.resetScan();
+}
+
+function switchAddTab(tab) {
+  document.getElementById('tabone').classList.toggle('active', tab==='one');
+  document.getElementById('tabrange').classList.toggle('active', tab==='range');
+  document.getElementById('form-one').style.display = tab==='one' ? 'block' : 'none';
+  document.getElementById('form-range').style.display = tab==='range' ? 'block' : 'none';
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(e, id) { if (e.target.id === id) closeModalById(id); }
+function closeModalById(id) { document.getElementById(id).classList.remove('open'); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Range preview
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'rf' || e.target.id === 'rl') {
+    const f = parseInt(document.getElementById('rf').value);
+    const l = parseInt(document.getElementById('rl').value);
+    const p = document.getElementById('range-preview');
+    p.textContent = (!isNaN(f) && !isNaN(l) && l >= f) ? 'মোট ' + (l-f+1) + 'টি বন্ড যোগ হবে।' : '';
+  }
+});
+</script>
+</body>
+</html>
